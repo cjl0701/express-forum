@@ -6,16 +6,20 @@ const template = require("./lib/template.js");
 const path = require("path");
 const sanitizeHtml = require("sanitize-html");
 const qs = require("querystring");
+const bodyParser = require("body-parser"); //미들웨어
+const compression = require("compression");
+
+//요청이 들어올 때마다 실행됨
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false })); //body-parser가 실행되어 미들웨어 장착
+
+app.use(compression()); //compressiong()함수 실행 미들웨어 리턴 -> app은 미들웨어 장착
 
 //route, routing : path마다 적당한 응답. (기존 코드는 if문으로 구현)
 //라우팅: 애플리케이션 엔드 포인트(URI)의 정의, 그리고 URI가 클라이언트 요청에 응답하는 방식
 //기본 형식
 app.get("/routing", (req, res) => {
   res.send("routing!!");
-});
-// POST method route
-app.post("/", function (req, res) {
-  res.send("POST request to the homepage");
 });
 
 //clean url : clean URL은 질의어 없이, 경로만 가진 간단한 구조의 URL. 검색 엔진 친화적.
@@ -92,19 +96,26 @@ app.get("/create", (req, res) => {
 });
 
 app.post("/create_process", (req, res) => {
+  /*
   let body = "";
-  req.on("data", function (data) {
+  req.on("data", function (data) { //data 이벤트
     body = body + data; // 패킷
   });
-  req.on("end", function () {
+  req.on("end", function () { //end 이벤트
     let post = qs.parse(body);
     let title = post.title;
     let description = post.description;
     fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-      // res.writeHead(302, { Location: `/page/${title}` });
-      // res.end();
       res.redirect(`/page/${title}`);
     });
+  });*/
+  let post = req.body;
+  let title = post.title;
+  let description = post.description;
+  fs.writeFile(`data/${title}`, description, "utf8", function (err) {
+    // res.writeHead(302, { Location: `/page/${title}` });
+    // res.end();
+    res.redirect(`/page/${title}`);
   });
 });
 
@@ -136,35 +147,23 @@ app.get("/update/:pageId", (req, res) => {
 });
 
 app.post("/update_process", (req, res) => {
-  let body = "";
-  req.on("data", function (data) {
-    body = body + data;
-  });
-  req.on("end", function () {
-    let post = qs.parse(body);
-    let id = post.id;
-    let title = post.title;
-    let description = post.description;
-    fs.rename(`data/${id}`, `data/${title}`, function (error) {
-      fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-        res.redirect(`/page/${title}`);
-      });
+  let post = req.body;
+  let id = post.id;
+  let title = post.title;
+  let description = post.description;
+  fs.rename(`data/${id}`, `data/${title}`, function (error) {
+    fs.writeFile(`data/${title}`, description, "utf8", function (err) {
+      res.redirect(`/page/${title}`);
     });
   });
 });
 
 app.post("/delete_process", (req, res) => {
-  let body = "";
-  req.on("data", function (data) {
-    body = body + data;
-  });
-  req.on("end", function () {
-    let post = qs.parse(body);
-    let id = post.id;
-    let filteredId = path.parse(id).base;
-    fs.unlink(`data/${filteredId}`, function (error) {
-      res.redirect("/");
-    });
+  let post = req.body;
+  let id = post.id;
+  let filteredId = path.parse(id).base;
+  fs.unlink(`data/${filteredId}`, function (error) {
+    res.redirect("/");
   });
 });
 
