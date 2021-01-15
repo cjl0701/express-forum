@@ -57,7 +57,7 @@ app.get("/page/:pageId", (req, res) => {
         `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
         ` <a href="/create">create</a>
           <a href="/update/${sanitizedTitle}">update</a>
-          <form action="delete_process" method="post">
+          <form action="/delete_process" method="post">
             <input type="hidden" name="id" value="${sanitizedTitle}">
             <input type="submit" value="delete">
           </form>`
@@ -153,6 +153,22 @@ app.post("/update_process", (req, res) => {
   });
 });
 
+app.post("/delete_process", (req, res) => {
+  let body = "";
+  req.on("data", function (data) {
+    body = body + data;
+  });
+  req.on("end", function () {
+    let post = qs.parse(body);
+    let id = post.id;
+    let filteredId = path.parse(id).base;
+    fs.unlink(`data/${filteredId}`, function (error) {
+      res.writeHead(302, { Location: `/` });
+      res.end();
+    });
+  });
+});
+
 app.listen(port, () => {
   //listen이 실행될 때 웹 서버 실행. port 번호로 listening
   console.log(`Example app listening at http://localhost:${port}`);
@@ -178,19 +194,6 @@ var app = http.createServer(function(request,response){
     } else if(pathname === '/update'){
     } else if(pathname === '/update_process'){
     } else if(pathname === '/delete_process'){
-      var body = '';
-      request.on('data', function(data){
-          body = body + data;
-      });
-      request.on('end', function(){
-          var post = qs.parse(body);
-          var id = post.id;
-          var filteredId = path.parse(id).base;
-          fs.unlink(`data/${filteredId}`, function(error){
-            response.writeHead(302, {Location: `/`});
-            response.end();
-          })
-      });
     } else {
       response.writeHead(404);
       response.end('Not found');
