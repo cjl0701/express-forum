@@ -1,21 +1,36 @@
-const express = require('express') //모듈 load
-const app = express() //함수. application 객체 반환
-const port = 3000
+const express = require("express"); //모듈 load
+const app = express(); //함수. application 객체 반환
+const port = 3000;
 
 //route, routing : path마다 적당한 응답. (기존 코드는 if문으로 구현)
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-app.get('/routing', (req, res) => {
-  res.send('routing!!')
-})
-app.get('/routing/test', (req, res) => {
-  res.send('routing test!')
-})
+app.get("/", (req, res) => {
+  fs.readdir("./data", function (error, filelist) {
+    let title = "Welcome";
+    let description = "Hello, Node.js";
+    let list = template.list(filelist);
+    let html = template.HTML(
+      title,
+      list,
+      `<h2>${title}</h2>${description}`,
+      `<a href="/create">create</a>`
+    );
+    // response.writeHead(200);
+    // response.end(html);
+    res.send("Hello World!");
+  });
+});
 
-app.listen(port, () => { //listen이 실행될 때 웹 서버 실행. port 번호로 listening
-  console.log(`Example app listening at http://localhost:${port}`)
-})
+app.get("/routing", (req, res) => {
+  res.send("routing!!");
+});
+app.get("/routing/test", (req, res) => {
+  res.send("routing test!");
+});
+
+app.listen(port, () => {
+  //listen이 실행될 때 웹 서버 실행. port 번호로 listening
+  console.log(`Example app listening at http://localhost:${port}`);
+});
 
 /* 이 node.js 기반 코드를 express로 재구성할 것
 var http = require('http');
