@@ -1,8 +1,29 @@
 const express = require("express"); //모듈 load
 const app = express(); //함수. application 객체 반환
 const port = 3000;
+const fs = require("fs");
+const template = require("./lib/template.js");
+const path = require("path");
+const sanitizeHtml = require("sanitize-html");
 
 //route, routing : path마다 적당한 응답. (기존 코드는 if문으로 구현)
+//라우팅: 애플리케이션 엔드 포인트(URI)의 정의, 그리고 URI가 클라이언트 요청에 응답하는 방식
+//기본 형식
+app.get("/routing", (req, res) => {
+  res.send("routing!!");
+});
+// POST method route
+app.post("/", function (req, res) {
+  res.send("POST request to the homepage");
+});
+
+//clean url : clean URL은 질의어 없이, 경로만 가진 간단한 구조의 URL. 검색 엔진 친화적.
+//기본 형식
+app.get("/users/:userId/books/:bookId", (req, res) => {
+  //http://localhost:3000/users/cjl0701/books/1
+  res.send(req.params); //{"userId":"cjl0701","bookId":"1"}
+});
+
 app.get("/", (req, res) => {
   fs.readdir("./data", function (error, filelist) {
     let title = "Welcome";
@@ -16,15 +37,33 @@ app.get("/", (req, res) => {
     );
     // response.writeHead(200);
     // response.end(html);
-    res.send("Hello World!");
+    res.send(html);
   });
 });
 
-app.get("/routing", (req, res) => {
-  res.send("routing!!");
-});
-app.get("/routing/test", (req, res) => {
-  res.send("routing test!");
+app.get("/page/:pageId", (req, res) => {
+  fs.readdir("./data", function (error, filelist) {
+    let filteredId = path.parse(req.params.pageId).base;
+    fs.readFile(`data/${filteredId}`, "utf8", function (err, description) {
+      let sanitizedTitle = sanitizeHtml(filteredId);
+      let sanitizedDescription = sanitizeHtml(description, {
+        allowedTags: ["h1"],
+      });
+      let list = template.list(filelist);
+      let html = template.HTML(
+        sanitizedTitle,
+        list,
+        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+        ` <a href="/create">create</a>
+          <a href="/update?id=${sanitizedTitle}">update</a>
+          <form action="delete_process" method="post">
+            <input type="hidden" name="id" value="${sanitizedTitle}">
+            <input type="submit" value="delete">
+          </form>`
+      );
+      res.send(html);
+    });
+  });
 });
 
 app.listen(port, () => {
