@@ -31,7 +31,7 @@ app.get("*", (req, res, next) => {
     next();
   });
 });
-
+/*
 //route, routing : path마다 적당한 응답. (기존 코드는 if문으로 구현)
 //라우팅: 애플리케이션 엔드 포인트(URI)의 정의, 그리고 URI가 클라이언트 요청에 응답하는 방식
 //기본 형식
@@ -44,7 +44,7 @@ app.get("/routing", (req, res) => {
 app.get("/users/:userId/books/:bookId", (req, res) => {
   //http://localhost:3000/users/cjl0701/books/1
   res.send(req.params); //{"userId":"cjl0701","bookId":"1"}
-});
+});*/
 
 app.get("/", (req, res) => {
   //사실은 이 콜백 함수도 미들웨어였다!
@@ -63,40 +63,14 @@ app.get("/", (req, res) => {
   res.send(html);
 });
 
-app.get("/page/:pageId", (req, res, next) => {
-  let filteredId = path.parse(req.params.pageId).base;
-  fs.readFile(`data/${filteredId}`, "utf8", function (err, description) {
-    if (err) next(err);
-    else {
-      let sanitizedTitle = sanitizeHtml(filteredId);
-      let sanitizedDescription = sanitizeHtml(description, {
-        allowedTags: ["h1"],
-      });
-      let list = template.list(req.list);
-      let html = template.HTML(
-        sanitizedTitle,
-        list,
-        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-        ` <a href="/create">create</a>
-        <a href="/update/${sanitizedTitle}">update</a>
-        <form action="/delete_process" method="post">
-          <input type="hidden" name="id" value="${sanitizedTitle}">
-          <input type="submit" value="delete">
-        </form>`
-      );
-      res.send(html);
-    }
-  });
-});
-
-app.get("/create", (req, res) => {
+app.get("/topic/create", (req, res) => {
   let title = "WEB - create";
   let list = template.list(req.list);
   let html = template.HTML(
     title,
     list,
     `
-    <form action="/create_process" method="post">
+    <form action="/topic/create_process" method="post">
       <p><input type="text" name="title" placeholder="title"></p>
       <p>
         <textarea name="description" placeholder="description"></textarea>
@@ -111,7 +85,7 @@ app.get("/create", (req, res) => {
   res.send(html);
 });
 
-app.post("/create_process", (req, res) => {
+app.post("/topic/create_process", (req, res) => {
   /*
   let body = "";
   req.on("data", function (data) { //data 이벤트
@@ -131,11 +105,11 @@ app.post("/create_process", (req, res) => {
   fs.writeFile(`data/${title}`, description, "utf8", function (err) {
     // res.writeHead(302, { Location: `/page/${title}` });
     // res.end();
-    res.redirect(`/page/${title}`);
+    res.redirect(`/topic/page/${title}`);
   });
 });
 
-app.get("/update/:pageId", (req, res) => {
+app.get("/topic/update/:pageId", (req, res) => {
   let title = req.params.pageId;
   fs.readFile(`data/${title}`, "utf8", function (err, description) {
     let list = template.list(req.list);
@@ -143,7 +117,7 @@ app.get("/update/:pageId", (req, res) => {
       title,
       list,
       `
-      <form action="/update_process" method="post">
+      <form action="/topic/update_process" method="post">
         <input type="hidden" name="id" value="${title}">
         <p><input type="text" name="title" placeholder="title" value="${title}"></p>
         <p>
@@ -154,30 +128,56 @@ app.get("/update/:pageId", (req, res) => {
         </p>
       </form>
       `,
-      `<a href="/create">create</a> <a href="/update/${title}">update</a>`
+      `<a href="/topic/create">create</a> <a href="/topic/update/${title}">update</a>`
     );
     res.send(html);
   });
 });
 
-app.post("/update_process", (req, res) => {
+app.post("/topic/update_process", (req, res) => {
   let post = req.body;
   let id = post.id;
   let title = post.title;
   let description = post.description;
   fs.rename(`data/${id}`, `data/${title}`, function (error) {
     fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-      res.redirect(`/page/${title}`);
+      res.redirect(`/topic/page/${title}`);
     });
   });
 });
 
-app.post("/delete_process", (req, res) => {
+app.post("/topic/delete_process", (req, res) => {
   let post = req.body;
   let id = post.id;
   let filteredId = path.parse(id).base;
   fs.unlink(`data/${filteredId}`, function (error) {
     res.redirect("/");
+  });
+});
+
+app.get("/topic/page/:pageId", (req, res, next) => {
+  let filteredId = path.parse(req.params.pageId).base;
+  fs.readFile(`data/${filteredId}`, "utf8", function (err, description) {
+    if (err) next(err);
+    else {
+      let sanitizedTitle = sanitizeHtml(filteredId);
+      let sanitizedDescription = sanitizeHtml(description, {
+        allowedTags: ["h1"],
+      });
+      let list = template.list(req.list);
+      let html = template.HTML(
+        sanitizedTitle,
+        list,
+        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+        ` <a href="/topic/create">create</a>
+        <a href="/topic/update/${sanitizedTitle}">update</a>
+        <form action="/topic/delete_process" method="post">
+          <input type="hidden" name="id" value="${sanitizedTitle}">
+          <input type="submit" value="delete">
+        </form>`
+      );
+      res.send(html);
+    }
   });
 });
 
