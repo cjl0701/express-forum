@@ -63,26 +63,29 @@ app.get("/", (req, res) => {
   res.send(html);
 });
 
-app.get("/page/:pageId", (req, res) => {
+app.get("/page/:pageId", (req, res, next) => {
   let filteredId = path.parse(req.params.pageId).base;
   fs.readFile(`data/${filteredId}`, "utf8", function (err, description) {
-    let sanitizedTitle = sanitizeHtml(filteredId);
-    let sanitizedDescription = sanitizeHtml(description, {
-      allowedTags: ["h1"],
-    });
-    let list = template.list(req.list);
-    let html = template.HTML(
-      sanitizedTitle,
-      list,
-      `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-      ` <a href="/create">create</a>
+    if (err) next(err);
+    else {
+      let sanitizedTitle = sanitizeHtml(filteredId);
+      let sanitizedDescription = sanitizeHtml(description, {
+        allowedTags: ["h1"],
+      });
+      let list = template.list(req.list);
+      let html = template.HTML(
+        sanitizedTitle,
+        list,
+        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+        ` <a href="/create">create</a>
         <a href="/update/${sanitizedTitle}">update</a>
         <form action="/delete_process" method="post">
           <input type="hidden" name="id" value="${sanitizedTitle}">
           <input type="submit" value="delete">
         </form>`
-    );
-    res.send(html);
+      );
+      res.send(html);
+    }
   });
 });
 
@@ -176,6 +179,17 @@ app.post("/delete_process", (req, res) => {
   fs.unlink(`data/${filteredId}`, function (error) {
     res.redirect("/");
   });
+});
+
+//미들웨어는 순차적으로 처리되기 때문에 맨 밑에!
+app.use(function (req, res, next) {
+  res.status(404).send("[404] Sorry cant find that!");
+});
+
+//next(인자) -> 매개변수 4개짜리 미들웨어 호출
+app.use(function (err, req, res, next) {
+  console.error(err.stack);
+  res.status(500).send("[500] Something broke!");
 });
 
 app.listen(port, () => {
