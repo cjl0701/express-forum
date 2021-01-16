@@ -7,6 +7,9 @@ const path = require("path");
 const sanitizeHtml = require("sanitize-html");
 const qs = require("querystring");
 
+//정적 파일
+app.use(express.static("public")); //public 디렉토리에서 static 파일 찾겠다
+
 //third-party 미들웨어 import
 const bodyParser = require("body-parser");
 const compression = require("compression");
@@ -51,7 +54,8 @@ app.get("/", (req, res) => {
   let html = template.HTML(
     title,
     list,
-    `<h2>${title}</h2>${description}`,
+    `<h2>${title}</h2>${description}
+    <img src = "/images/hello.jpg" style = "width:500px; display:block; margin-top:10px">`,
     `<a href="/create">create</a>`
   );
   // response.writeHead(200);
