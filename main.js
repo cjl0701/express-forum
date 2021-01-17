@@ -4,6 +4,9 @@ const port = 3000;
 const fs = require("fs");
 const indexRouter = require("./routes/index");
 const topicRouter = require("./routes/topic"); //라우터 모듈(미들웨어)
+const helmet = require("helmet");
+
+app.use(helmet()); //보안
 
 //정적 파일
 app.use(express.static("public")); //public 디렉토리에서 static 파일 찾겠다
