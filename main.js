@@ -2,7 +2,7 @@ const express = require("express"); //모듈 load
 const app = express(); //함수. application 객체 반환
 const port = 3000;
 const fs = require("fs");
-const template = require("./lib/template.js");
+const indexRouter = require("./routes/index");
 const topicRouter = require("./routes/topic"); //라우터 모듈(미들웨어)
 
 //정적 파일
@@ -31,24 +31,8 @@ app.get("*", (req, res, next) => {
   });
 });
 
+app.use("/", indexRouter);
 app.use("/topic", topicRouter); //이 경로에 topicRouter를 미들웨어로서 할당
-
-app.get("/", (req, res) => {
-  //사실은 이 콜백 함수도 미들웨어였다!
-  let title = "Welcome";
-  let description = "Hello, Node.js";
-  let list = template.list(req.list);
-  let html = template.HTML(
-    title,
-    list,
-    `<h2>${title}</h2>${description}
-    <img src = "/images/hello.jpg" style = "width:500px; display:block; margin-top:10px">`,
-    `<a href="/create">create</a>`
-  );
-  // response.writeHead(200);
-  // response.end(html);
-  res.send(html);
-});
 
 //미들웨어는 순차적으로 처리되기 때문에 맨 밑에!
 app.use(function (req, res, next) {
@@ -61,8 +45,8 @@ app.use(function (err, req, res, next) {
   res.status(500).send("[500] Something broke!");
 });
 
+//listen이 실행될 때 웹 서버 실행. port 번호로 listening
 app.listen(port, () => {
-  //listen이 실행될 때 웹 서버 실행. port 번호로 listening
   console.log(`Example app listening at http://localhost:${port}`);
 });
 
