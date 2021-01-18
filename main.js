@@ -5,7 +5,22 @@ const fs = require("fs");
 const helmet = require("helmet");
 const session = require("express-session"); //세션 미들웨어는 request 객체의 프로퍼티로 session 객체 추가
 const FileStore = require("session-file-store")(session);
+//third-party 미들웨어 import
+const bodyParser = require("body-parser");
+const compression = require("compression");
+//미들웨어 작성
+let myLogger = function (req, res, next) {
+  console.log("LOGGED");
+  next(); //앱 내의 다음 미들웨어 함수 호출.
+};
 
+//미들웨어 함수 로드. 요청이 들어올 때마다 실행됨
+app.use(helmet()); //보안
+//정적 파일
+app.use(express.static("public")); //public 디렉토리에서 static 파일 찾겠다
+app.use(myLogger); //요청을 받을 때마다 라우팅 전에 콘솔에 "LOGGED" 출력
+app.use(bodyParser.urlencoded({ extended: false })); //body-parser가 실행되어 미들웨어 장착
+app.use(compression());
 app.use(
   session({
     secret: "keyboard cat!@!~!@~!@",
@@ -14,26 +29,6 @@ app.use(
     store: new FileStore(),
   })
 );
-
-app.use(helmet()); //보안
-
-//정적 파일
-app.use(express.static("public")); //public 디렉토리에서 static 파일 찾겠다
-
-//third-party 미들웨어 import
-const bodyParser = require("body-parser");
-const compression = require("compression");
-
-//미들웨어 작성
-let myLogger = function (req, res, next) {
-  console.log("LOGGED");
-  next(); //앱 내의 다음 미들웨어 함수 호출.
-};
-
-//미들웨어 함수 로드. 요청이 들어올 때마다 실행됨
-app.use(myLogger); //요청을 받을 때마다 라우팅 전에 콘솔에 "LOGGED" 출력
-app.use(bodyParser.urlencoded({ extended: false })); //body-parser가 실행되어 미들웨어 장착
-app.use(compression());
 
 //get 요청에 대해서만 적용되는 미들웨어!
 app.get("*", (req, res, next) => {

@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const fs = require("fs");
 const template = require("../lib/template.js");
+const auth = require("../lib/auth.js");
 const path = require("path");
 const sanitizeHtml = require("sanitize-html");
 
@@ -19,7 +20,8 @@ router.get("/create", (req, res) => {
       <p><input type="submit"></p>
      </form>
     `,
-    ""
+    "",
+    auth.statusUI(req, res)
   );
   res.send(html);
 });
@@ -67,7 +69,8 @@ router.get("/update/:pageId", (req, res) => {
           </p>
         </form>
         `,
-      `<a href="/topic/create">create</a> <a href="/topic/update/${title}">update</a>`
+      `<a href="/topic/create">create</a> <a href="/topic/update/${title}">update</a>`,
+      auth.statusUI(req, res)
     );
     res.send(html);
   });
@@ -113,7 +116,8 @@ router.get("/:pageId", (req, res, next) => {
           <form action="/topic/delete_process" method="post">
             <input type="hidden" name="id" value="${sanitizedTitle}">
             <input type="submit" value="delete">
-          </form>`
+          </form>`,
+        auth.statusUI(req, res)
       );
       res.send(html);
     }

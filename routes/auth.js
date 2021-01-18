@@ -6,7 +6,7 @@ const template = require("../lib/template.js");
 const authData = {
   email: "cjl2076@naver.com",
   password: "0000",
-  nickname: "master",
+  nickname: "Owner",
 };
 
 router.get("/login", (req, res) => {
@@ -29,9 +29,10 @@ router.get("/login", (req, res) => {
 
 router.post("/login_process", (req, res) => {
   let post = req.body; //by body-parser
-  if (post.email === authData.email && post.password == authData.password) {
+  if (post.email === authData.email && post.password === authData.password) {
     req.session.is_logined = true;
     req.session.nickname = authData.nickname;
+    console.log("login:", req.session);
     res.redirect("/");
   } else res.send("who?");
 });

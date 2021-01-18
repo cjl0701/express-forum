@@ -1,9 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const template = require("../lib/template.js");
+const auth = require("../lib/auth.js");
 
 router.get("/", (req, res) => {
   //사실은 이 콜백 함수도 미들웨어였다!
+  console.log("req: ", req.session);
   let title = "Welcome";
   let description = "Hello, Node.js";
   let list = template.list(req.list);
@@ -12,7 +14,8 @@ router.get("/", (req, res) => {
     list,
     `<h2>${title}</h2>${description}
       <img src = "/images/hello.jpg" style = "width:500px; display:block; margin-top:10px">`,
-    `<a href="/create">create</a>`
+    `<a href="/create">create</a>`,
+    auth.statusUI(req, res)
   );
   // response.writeHead(200);
   // response.end(html);
