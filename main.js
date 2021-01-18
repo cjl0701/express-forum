@@ -3,6 +3,17 @@ const app = express(); //함수. application 객체 반환
 const port = 3000;
 const fs = require("fs");
 const helmet = require("helmet");
+const session = require("express-session"); //세션 미들웨어는 request 객체의 프로퍼티로 session 객체 추가
+const FileStore = require("session-file-store")(session);
+
+app.use(
+  session({
+    secret: "keyboard cat!@!~!@~!@",
+    resave: false, //세션 변경없어도 매번 저장
+    saveUninitialized: true, //세션이 필요하기 전까진 구동x
+    store: new FileStore(),
+  })
+);
 
 app.use(helmet()); //보안
 

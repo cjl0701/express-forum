@@ -1,15 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const fs = require("fs");
 const template = require("../lib/template.js");
-const path = require("path");
-const sanitizeHtml = require("sanitize-html");
 
+//학습용. 실서버가 이렇게 하면 안된다.
 const authData = {
   email: "cjl2076@naver.com",
   password: "0000",
   nickname: "master",
 };
+
 router.get("/login", (req, res) => {
   let title = "WEB - login";
   let list = template.list(req.list);
@@ -30,9 +29,11 @@ router.get("/login", (req, res) => {
 
 router.post("/login_process", (req, res) => {
   let post = req.body; //by body-parser
-  if (post.email === authData.email && post.password == authData.password)
-    res.send("welcome");
-  else res.send("who?");
+  if (post.email === authData.email && post.password == authData.password) {
+    req.session.is_logined = true;
+    req.session.nickname = authData.nickname;
+    res.redirect("/");
+  } else res.send("who?");
 });
 
 module.exports = router;
