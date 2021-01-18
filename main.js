@@ -2,8 +2,6 @@ const express = require("express"); //모듈 load
 const app = express(); //함수. application 객체 반환
 const port = 3000;
 const fs = require("fs");
-const indexRouter = require("./routes/index");
-const topicRouter = require("./routes/topic"); //라우터 모듈(미들웨어)
 const helmet = require("helmet");
 
 app.use(helmet()); //보안
@@ -34,8 +32,14 @@ app.get("*", (req, res, next) => {
   });
 });
 
+//라우터 모듈(미들웨어)
+const indexRouter = require("./routes/index");
+const topicRouter = require("./routes/topic");
+const authRouter = require("./routes/auth");
+
 app.use("/", indexRouter);
 app.use("/topic", topicRouter); //이 경로에 topicRouter를 미들웨어로서 할당
+app.use("/auth", authRouter);
 
 //미들웨어는 순차적으로 처리되기 때문에 맨 밑에!
 app.use(function (req, res, next) {

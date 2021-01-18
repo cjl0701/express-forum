@@ -5,6 +5,38 @@ const template = require("../lib/template.js");
 const path = require("path");
 const sanitizeHtml = require("sanitize-html");
 
+const authData = {
+  email: "cjl2076@naver.com",
+  password: "0000",
+  nickname: "master",
+};
+router.get("/login", (req, res) => {
+  let title = "WEB - login";
+  let list = template.list(req.list);
+  let html = template.HTML(
+    title,
+    list,
+    `
+    <form action="/auth/login_process" method="post">
+      <p><input type="text" name="email" placeholder="email"></p>
+      <p><input type="password" name="password" placeholder="password"></p>
+      <p><input type="submit" value="login"></p>
+    </form>
+    `,
+    ""
+  );
+  res.send(html);
+});
+
+router.post("/login_process", (req, res) => {
+  let post = req.body; //by body-parser
+  if (post.email === authData.email && post.password == authData.password)
+    res.send("welcome");
+  else res.send("who?");
+});
+
+module.exports = router;
+/*
 //router 객체에 미들웨어 설치
 router.get("/create", (req, res) => {
   let title = "WEB - create";
@@ -14,9 +46,9 @@ router.get("/create", (req, res) => {
     list,
     `
      <form action="/topic/create_process" method="post">
-      <p><input type="text" name="title" placeholder="title"></p>
-      <p><textarea name="description" placeholder="description"></textarea></p>
-      <p><input type="submit"></p>
+       <p><input type="text" name="title" placeholder="title"></p>
+       <p><textarea name="description" placeholder="description"></textarea></p>
+       <p><input type="submit"></p>
      </form>
     `,
     ""
@@ -25,19 +57,18 @@ router.get("/create", (req, res) => {
 });
 
 router.post("/create_process", (req, res) => {
-  /*
-    let body = "";
-    req.on("data", function (data) { //data 이벤트
-      body = body + data; // 패킷
-    });
-    req.on("end", function () { //end 이벤트
-      let post = qs.parse(body);
-      let title = post.title;
-      let description = post.description;
-      fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-        res.redirect(`/page/${title}`);
-      });
-    });*/
+    // let body = "";
+    // req.on("data", function (data) { //data 이벤트
+    //   body = body + data; // 패킷
+    // });
+    // req.on("end", function () { //end 이벤트
+    //   let post = qs.parse(body);
+    //   let title = post.title;
+    //   let description = post.description;
+    //   fs.writeFile(`data/${title}`, description, "utf8", function (err) {
+    //     res.redirect(`/page/${title}`);
+    //   });
+    // });
   let post = req.body;
   let title = post.title;
   let description = post.description;
@@ -119,5 +150,4 @@ router.get("/:pageId", (req, res, next) => {
     }
   });
 });
-
-module.exports = router;
+*/
