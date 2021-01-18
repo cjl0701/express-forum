@@ -5,7 +5,6 @@ const auth = require("../lib/auth.js");
 
 router.get("/", (req, res) => {
   //사실은 이 콜백 함수도 미들웨어였다!
-  console.log("req: ", req.session);
   let title = "Welcome";
   let description = "Hello, Node.js";
   let list = template.list(req.list);

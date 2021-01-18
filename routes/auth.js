@@ -32,9 +32,14 @@ router.post("/login_process", (req, res) => {
   if (post.email === authData.email && post.password === authData.password) {
     req.session.is_logined = true;
     req.session.nickname = authData.nickname;
-    console.log("login:", req.session);
     res.redirect("/");
   } else res.send("who?");
+});
+
+router.get("/logout", (req, res) => {
+  req.session.destroy(function (err) {
+    res.redirect("/");
+  });
 });
 
 module.exports = router;
