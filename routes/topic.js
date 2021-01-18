@@ -8,6 +8,10 @@ const sanitizeHtml = require("sanitize-html");
 
 //router 객체에 미들웨어 설치
 router.get("/create", (req, res) => {
+  if (!auth.isOwner(req, res)) {
+    res.redirect("/");
+    return false; //더 진행되지 않도록 리턴.
+  }
   let title = "WEB - create";
   let list = template.list(req.list);
   let html = template.HTML(
@@ -51,6 +55,10 @@ router.post("/create_process", (req, res) => {
 });
 
 router.get("/update/:pageId", (req, res) => {
+  if (!auth.isOwner(req, res)) {
+    res.redirect("/");
+    return false; //더 진행되지 않도록 리턴.
+  }
   let title = req.params.pageId;
   fs.readFile(`data/${title}`, "utf8", function (err, description) {
     let list = template.list(req.list);
@@ -89,6 +97,10 @@ router.post("/update_process", (req, res) => {
 });
 
 router.post("/delete_process", (req, res) => {
+  if (!auth.isOwner(req, res)) {
+    res.redirect("/");
+    return false; //더 진행되지 않도록 리턴.
+  }
   let post = req.body;
   let id = post.id;
   let filteredId = path.parse(id).base;

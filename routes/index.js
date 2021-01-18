@@ -13,7 +13,7 @@ router.get("/", (req, res) => {
     list,
     `<h2>${title}</h2>${description}
       <img src = "/images/hello.jpg" style = "width:500px; display:block; margin-top:10px">`,
-    `<a href="/create">create</a>`,
+    `<a href="/topic/create">create</a>`,
     auth.statusUI(req, res)
   );
   // response.writeHead(200);
