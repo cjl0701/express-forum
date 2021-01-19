@@ -5,10 +5,14 @@ const template = require("../lib/template.js");
 router.get("/login", (req, res) => {
   let title = "WEB - login";
   let list = template.list(req.list);
+  let fmsg = req.flash();
+  let feedback = "";
+  if (fmsg.message) feedback = fmsg.message;
   let html = template.HTML(
     title,
     list,
     `
+    <div style="color:red;">${feedback}</div>
     <form action="/auth/login_process" method="post">
       <p><input type="text" name="email" placeholder="email"></p>
       <p><input type="password" name="pwd" placeholder="password"></p>

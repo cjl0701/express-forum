@@ -8,11 +8,15 @@ router.get("/", (req, res) => {
   let title = "Welcome";
   let description = "Hello, Node.js";
   let list = template.list(req.list);
+  let fmsg = req.flash();
+  let feedback = "";
+  if (fmsg.message) feedback = fmsg.message;
   let html = template.HTML(
     title,
     list,
-    `<h2>${title}</h2>${description}
-      <img src = "/images/hello.jpg" style = "width:500px; display:block; margin-top:10px">`,
+    `<div style="color:red;">${feedback}</div>
+    <h2>${title}</h2>${description}
+    <img src = "/images/hello.jpg" style = "width:500px; display:block; margin-top:10px">`,
     `<a href="/topic/create">create</a>`,
     auth.statusUI(req, res)
   );

@@ -11,7 +11,13 @@ const LocalStrategy = require("passport-local").Strategy;
 const bodyParser = require("body-parser");
 const compression = require("compression");
 const flash = require("connect-flash");
+//미들웨어 작성
+let myLogger = function (req, res, next) {
+  console.log("STARTED");
+  next(); //앱 내의 다음 미들웨어 함수 호출.
+};
 //미들웨어 함수 로드. 요청이 들어올 때마다 실행됨
+app.use(myLogger);
 app.use(helmet()); //보안
 app.use(express.static("public")); //public 디렉토리에서 static 파일 찾겠다
 app.use(bodyParser.urlencoded({ extended: false })); //body-parser가 실행되어 미들웨어 장착
@@ -24,7 +30,7 @@ app.use(
     store: new FileStore(),
   })
 );
-
+app.use(flash());
 //학습용. 실서버가 이렇게 하면 안된다.
 const authData = {
   email: "cjl2076@naver.com",
@@ -58,21 +64,32 @@ passport.use(
     },
     function (username, password, done) {
       if (username === authData.email)
-        if (password === authData.pwd) return done(null, authData);
+        if (password === authData.pwd)
+          return done(null, authData, { message: "welcome!!!" });
         else return done(null, false, { message: "Incorrect password." });
       else return done(null, false, { message: "Incorrect username." });
     }
   )
 );
-
-app.post(
-  "/auth/login_process",
-  passport.authenticate("local", {
-    //successRedirect: "/",
-    failureRedirect: "/auth/login",
-  }),
-  (req, res) => req.session.save(() => res.redirect("/"))
-);
+app.post("/auth/login_process", (req, res, next) => {
+  // passport.authenticate("local", {
+  //   //successRedirect: "/",
+  //   failureRedirect: "/auth/login",
+  //   failureFlash: true,
+  // })
+  passport.authenticate("local", (err, user, info) => {
+    if (req.session.flash) req.session.flash = {};
+    req.flash("message", info.message);
+    req.session.save(() => {
+      if (err) return next(err);
+      if (!user) return res.redirect("/auth/login");
+      req.logIn(user, (err) => {
+        if (err) return next(err);
+        return req.session.save(() => res.redirect("/"));
+      });
+    });
+  })(req, res, next);
+});
 
 //get 요청에 대해서만 적용되는 미들웨어!
 app.get("*", (req, res, next) => {
