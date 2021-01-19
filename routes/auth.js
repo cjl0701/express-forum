@@ -36,9 +36,14 @@ router.post("/login_process", (req, res) => {
 */
 
 router.get("/logout", (req, res) => {
-  req.session.destroy(function (err) {
+  req.logout(); //session 객체의 user를 없애줌
+  //세션에 바로 반영
+  req.session.save(() => {
     res.redirect("/");
   });
+  // req.session.destroy(function (err) {
+  //   res.redirect("/");
+  // });
 });
 
 module.exports = router;

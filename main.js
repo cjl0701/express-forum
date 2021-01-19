@@ -10,7 +10,7 @@ const LocalStrategy = require("passport-local").Strategy;
 //third-party 미들웨어 import
 const bodyParser = require("body-parser");
 const compression = require("compression");
-
+const flash = require("connect-flash");
 //미들웨어 함수 로드. 요청이 들어올 때마다 실행됨
 app.use(helmet()); //보안
 app.use(express.static("public")); //public 디렉토리에서 static 파일 찾겠다
@@ -24,6 +24,7 @@ app.use(
     store: new FileStore(),
   })
 );
+
 //학습용. 실서버가 이렇게 하면 안된다.
 const authData = {
   email: "cjl2076@naver.com",
