@@ -51,12 +51,14 @@ router.get("/update/:pageId", (req, res) => {
     req.flash("message", "login first");
     return req.session.save(() => res.redirect("/"));
   }
+
   let topic = db.get("topics").find({ id: req.params.pageId }).value();
 
   if (topic.user_id !== req.user.id) {
     req.flash("message", "not your topic!!");
     return req.session.save(() => res.redirect("/"));
   }
+
   let list = template.list(req.list);
   let html = template.HTML(
     topic.title,
@@ -84,15 +86,17 @@ router.post("/update_process", (req, res) => {
 
 router.post("/delete_process", (req, res) => {
   if (!auth.isOwner(req, res)) {
-    res.redirect("/");
-    return false; //더 진행되지 않도록 리턴.
+    req.flash("message", "login first");
+    return req.session.save(() => res.redirect("/"));
   }
   let post = req.body;
-  let id = post.id;
-  let filteredId = path.parse(id).base;
-  fs.unlink(`data/${filteredId}`, function (error) {
-    res.redirect("/");
-  });
+  let topic = db.get("topics").find({ id: post.id }).value();
+  if (topic.user_id !== req.user.id) {
+    req.flash("message", "not your topic!!");
+    return req.session.save(() => res.redirect("/"));
+  }
+  db.get("topics").remove({ id: post.id }).write();
+  res.redirect("/");
 });
 
 router.get("/:pageId", (req, res, next) => {
