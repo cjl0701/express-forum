@@ -48,44 +48,38 @@ router.post("/create_process", (req, res) => {
 
 router.get("/update/:pageId", (req, res) => {
   if (!auth.isOwner(req, res)) {
-    res.redirect("/");
-    return false; //더 진행되지 않도록 리턴.
+    req.flash("message", "login first");
+    return req.session.save(() => res.redirect("/"));
   }
-  let title = req.params.pageId;
-  fs.readFile(`data/${title}`, "utf8", function (err, description) {
-    let list = template.list(req.list);
-    let html = template.HTML(
-      title,
-      list,
-      `
-        <form action="/topic/update_process" method="post">
-          <input type="hidden" name="id" value="${title}">
-          <p><input type="text" name="title" placeholder="title" value="${title}"></p>
-          <p>
-            <textarea name="description" placeholder="description">${description}</textarea>
-          </p>
-          <p>
-            <input type="submit">
-          </p>
-        </form>
-        `,
-      `<a href="/topic/create">create</a> <a href="/topic/update/${title}">update</a>`,
-      auth.statusUI(req, res)
-    );
-    res.send(html);
-  });
+  let topic = db.get("topics").find({ id: req.params.pageId }).value();
+
+  if (topic.user_id !== req.user.id) {
+    req.flash("message", "not your topic!!");
+    return req.session.save(() => res.redirect("/"));
+  }
+  let list = template.list(req.list);
+  let html = template.HTML(
+    topic.title,
+    list,
+    `<form action="/topic/update_process" method="post">
+      <input type="hidden" name="id" value="${topic.id}">
+      <p><input type="text" name="title" placeholder="title" value="${topic.title}"></p>
+      <p><textarea name="description" placeholder="description">${topic.description}</textarea></p>
+      <p><input type="submit"></p>
+    </form>`,
+    `<a href="/topic/create">create</a> <a href="/topic/update/${topic.id}">update</a>`,
+    auth.statusUI(req, res)
+  );
+  res.send(html);
 });
 
 router.post("/update_process", (req, res) => {
   let post = req.body;
-  let id = post.id;
-  let title = post.title;
-  let description = post.description;
-  fs.rename(`data/${id}`, `data/${title}`, function (error) {
-    fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-      res.redirect(`/topic/${title}`);
-    });
-  });
+  db.get("topics")
+    .find({ id: post.id })
+    .assign({ title: post.title, description: post.description })
+    .write();
+  res.redirect(`/topic/${post.id}`);
 });
 
 router.post("/delete_process", (req, res) => {
@@ -114,11 +108,11 @@ router.get("/:pageId", (req, res, next) => {
     list,
     `<h2>${sanitizedTitle}</h2>${sanitizedDescription}<p>by ${author}</p>`,
     ` <a href="/topic/create">create</a>
-          <a href="/topic/update/${sanitizedTitle}">update</a>
-          <form action="/topic/delete_process" method="post">
-            <input type="hidden" name="id" value="${sanitizedTitle}">
-            <input type="submit" value="delete">
-          </form>`,
+      <a href="/topic/update/${topic.id}">update</a>
+      <form action="/topic/delete_process" method="post">
+        <input type="hidden" name="id" value="${topic.id}">
+        <input type="submit" value="delete">
+      </form>`,
     auth.statusUI(req, res)
   );
   res.send(html);
