@@ -1,7 +1,6 @@
 const express = require("express"); //모듈 load
 const app = express(); //함수. application 객체 반환
 const port = 3000;
-const fs = require("fs");
 const helmet = require("helmet");
 const session = require("express-session"); //세션 미들웨어는 request 객체의 프로퍼티로 session 객체 추가
 const FileStore = require("session-file-store")(session);
@@ -9,6 +8,7 @@ const FileStore = require("session-file-store")(session);
 const bodyParser = require("body-parser");
 const compression = require("compression");
 const flash = require("connect-flash");
+const db = require("./lib/db");
 //미들웨어 작성
 let myLogger = function (req, res, next) {
   console.log("MAIN.JS");
@@ -34,10 +34,8 @@ let passport = require("./lib/passport")(app);
 
 //get 요청에 대해서만 적용되는 미들웨어!
 app.get("*", (req, res, next) => {
-  fs.readdir("./data", function (error, filelist) {
-    req.list = filelist;
-    next();
-  });
+  req.list = db.get("topics").value();
+  next();
 });
 
 //라우터 모듈(미들웨어)
