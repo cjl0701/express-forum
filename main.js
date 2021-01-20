@@ -11,7 +11,7 @@ const compression = require("compression");
 const flash = require("connect-flash");
 //미들웨어 작성
 let myLogger = function (req, res, next) {
-  console.log("LOGGED");
+  console.log("MAIN.JS");
   next(); //앱 내의 다음 미들웨어 함수 호출.
 };
 //미들웨어 함수 로드. 요청이 들어올 때마다 실행됨

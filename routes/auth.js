@@ -29,16 +29,14 @@ module.exports = function (passport) {
 
   router.post("/login_process", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
-      console.log(`authenticate : ${user}`);
       if (req.session.flash) req.session.flash = {};
       req.flash("message", info.message);
-      req.session.save(() => {
+      if (err) return next(err);
+      if (!user) return res.redirect("/auth/login");
+      req.logIn(user, (err) => {
+        //serialize 호출해 session store에 반영
         if (err) return next(err);
-        if (!user) return res.redirect("/auth/login");
-        req.logIn(user, (err) => {
-          if (err) return next(err);
-          return req.session.save(() => res.redirect("/"));
-        });
+        return req.session.save(() => res.redirect("/"));
       });
     })(req, res, next);
   });
@@ -66,7 +64,7 @@ module.exports = function (passport) {
         <p><input type="text" name="email" placeholder="email"></p>
         <p><input type="password" name="pwd" placeholder="password"></p>
         <p><input type="password" name="pwd2" placeholder="password"></p>
-        <p><input type="text" name="displayName" placeholder="display name"></p>
+        <p><input type="text" name="nickname" placeholder="nickname"></p>
         <p><input type="submit" value="register"></p>
       </form>
       `,
@@ -85,7 +83,7 @@ module.exports = function (passport) {
         id: shortid.generate(),
         email: post.email,
         pwd: post.pwd,
-        nickname: post.displayName,
+        nickname: post.nickname,
       };
       db.get("users").push(user).write();
       req.login(user, function (err) {

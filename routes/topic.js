@@ -5,6 +5,8 @@ const template = require("../lib/template.js");
 const auth = require("../lib/auth.js");
 const path = require("path");
 const sanitizeHtml = require("sanitize-html");
+const db = require("../lib/db.js");
+const shortid = require("shortid");
 
 //router 객체에 미들웨어 설치
 router.get("/create", (req, res) => {
@@ -31,27 +33,17 @@ router.get("/create", (req, res) => {
 });
 
 router.post("/create_process", (req, res) => {
-  /*
-    let body = "";
-    req.on("data", function (data) { //data 이벤트
-      body = body + data; // 패킷
-    });
-    req.on("end", function () { //end 이벤트
-      let post = qs.parse(body);
-      let title = post.title;
-      let description = post.description;
-      fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-        res.redirect(`/page/${title}`);
-      });
-    });*/
   let post = req.body;
-  let title = post.title;
-  let description = post.description;
-  fs.writeFile(`data/${title}`, description, "utf8", function (err) {
-    // res.writeHead(302, { Location: `/page/${title}` });
-    // res.end();
-    res.redirect(`/topic/${title}`);
-  });
+  let id = shortid.generate();
+  db.get("topics")
+    .push({
+      id: id,
+      title: post.title,
+      description: post.description,
+      user_id: req.user.id,
+    })
+    .write();
+  res.redirect(`/topic/${id}`);
 });
 
 router.get("/update/:pageId", (req, res) => {
@@ -110,30 +102,26 @@ router.post("/delete_process", (req, res) => {
 });
 
 router.get("/:pageId", (req, res, next) => {
-  let filteredId = path.parse(req.params.pageId).base;
-  fs.readFile(`data/${filteredId}`, "utf8", function (err, description) {
-    if (err) next(err);
-    else {
-      let sanitizedTitle = sanitizeHtml(filteredId);
-      let sanitizedDescription = sanitizeHtml(description, {
-        allowedTags: ["h1"],
-      });
-      let list = template.list(req.list);
-      let html = template.HTML(
-        sanitizedTitle,
-        list,
-        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-        ` <a href="/topic/create">create</a>
+  let topic = db.get("topics").find({ id: req.params.pageId }).value();
+  let sanitizedTitle = sanitizeHtml(topic.title);
+  let sanitizedDescription = sanitizeHtml(topic.description, {
+    allowedTags: ["h1"],
+  });
+  let list = template.list(req.list);
+  let author = db.get("users").find({ id: topic.user_id }).value().nickname;
+  let html = template.HTML(
+    sanitizedTitle,
+    list,
+    `<h2>${sanitizedTitle}</h2>${sanitizedDescription}<p>by ${author}</p>`,
+    ` <a href="/topic/create">create</a>
           <a href="/topic/update/${sanitizedTitle}">update</a>
           <form action="/topic/delete_process" method="post">
             <input type="hidden" name="id" value="${sanitizedTitle}">
             <input type="submit" value="delete">
           </form>`,
-        auth.statusUI(req, res)
-      );
-      res.send(html);
-    }
-  });
+    auth.statusUI(req, res)
+  );
+  res.send(html);
 });
 
 module.exports = router;

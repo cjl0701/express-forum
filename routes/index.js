@@ -20,8 +20,6 @@ router.get("/", (req, res) => {
     `<a href="/topic/create">create</a>`,
     auth.statusUI(req, res)
   );
-  // response.writeHead(200);
-  // response.end(html);
   res.send(html);
 });
 
