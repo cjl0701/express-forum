@@ -2,11 +2,7 @@ const express = require("express");
 const router = express.Router();
 const template = require("../lib/template.js");
 const shortid = require("shortid");
-const low = require("lowdb");
-const FileSync = require("lowdb/adapters/FileSync");
-const adapter = new FileSync("db.json");
-const db = low(adapter);
-db.defaults({ users: [] }).write();
+const db = require("../lib/db");
 
 module.exports = function (passport) {
   router.get("/login", (req, res) => {
@@ -31,28 +27,9 @@ module.exports = function (passport) {
     res.send(html);
   });
 
-  /*
-router.post("/login_process", (req, res) => {
-  let post = req.body; //by body-parser
-  if (post.email === authData.email && post.password === authData.password) {
-    req.session.is_logined = true;
-    req.session.nickname = authData.nickname; //이는 나중에 세션 스토어에 반영된다.
-    //세션 스토어에 저장하는게 리다이렉션보다 느리면 로그인이 안된다.
-    //세션 스토어에 바로 저장하게 하는 메소드
-    req.session.save(function () {
-      res.redirect("/");
-    });
-  } else res.send("who?");
-});
-*/
-
   router.post("/login_process", (req, res, next) => {
-    // passport.authenticate("local", {
-    //   //successRedirect: "/",
-    //   failureRedirect: "/auth/login",
-    //   failureFlash: true,
-    // })
     passport.authenticate("local", (err, user, info) => {
+      console.log(`authenticate : ${user}`);
       if (req.session.flash) req.session.flash = {};
       req.flash("message", info.message);
       req.session.save(() => {
@@ -72,9 +49,6 @@ router.post("/login_process", (req, res) => {
     req.session.save(() => {
       res.redirect("/");
     });
-    // req.session.destroy(function (err) {
-    //   res.redirect("/");
-    // });
   });
 
   router.get("/register", (req, res) => {
@@ -107,15 +81,16 @@ router.post("/login_process", (req, res) => {
       req.flash("message", "password must be same!");
       req.session.save(() => res.redirect("/auth/register"));
     } else {
-      db.get("users")
-        .push({
-          id: shortid.generate(),
-          email: post.email,
-          pwd: post.pwd,
-          nickname: post.displayName,
-        })
-        .write();
-      res.redirect("/");
+      let user = {
+        id: shortid.generate(),
+        email: post.email,
+        pwd: post.pwd,
+        nickname: post.displayName,
+      };
+      db.get("users").push(user).write();
+      req.login(user, function (err) {
+        req.session.save(() => res.redirect("/"));
+      });
     }
   });
 
