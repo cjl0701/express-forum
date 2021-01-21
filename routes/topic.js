@@ -11,10 +11,10 @@ const shortid = require("shortid");
 //router 객체에 미들웨어 설치
 router.get("/create", (req, res) => {
   if (!auth.isOwner(req, res)) {
-    res.redirect("/");
-    return false; //더 진행되지 않도록 리턴.
+    req.flash("message", "login first");
+    return req.session.save(() => res.redirect("/"));
   }
-  let title = "WEB - create";
+  let title = "topic - create";
   let list = template.list(req.list);
   let html = template.HTML(
     title,

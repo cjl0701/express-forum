@@ -3,10 +3,12 @@ const router = express.Router();
 const template = require("../lib/template.js");
 const shortid = require("shortid");
 const db = require("../lib/db");
+const bcrypt = require("bcrypt");
+const saltRounds = 10; //높을수록 뚫기 어려움
 
 module.exports = function (passport) {
   router.get("/login", (req, res) => {
-    let title = "WEB - login";
+    let title = "login";
     let list = template.list(req.list);
     let fmsg = req.flash();
     let feedback = "";
@@ -32,7 +34,7 @@ module.exports = function (passport) {
       if (req.session.flash) req.session.flash = {};
       req.flash("message", info.message);
       if (err) return next(err);
-      if (!user) return res.redirect("/auth/login");
+      if (!user) return req.session.save(() => res.redirect("/auth/login"));
       req.logIn(user, (err) => {
         //serialize 호출해 session store에 반영
         if (err) return next(err);
@@ -79,15 +81,18 @@ module.exports = function (passport) {
       req.flash("message", "password must be same!");
       req.session.save(() => res.redirect("/auth/register"));
     } else {
-      let user = {
-        id: shortid.generate(),
-        email: post.email,
-        pwd: post.pwd,
-        nickname: post.nickname,
-      };
-      db.get("users").push(user).write();
-      req.login(user, function (err) {
-        req.session.save(() => res.redirect("/"));
+      bcrypt.hash(post.pwd, saltRounds, function (err, hash) {
+        let user = {
+          id: shortid.generate(),
+          email: post.email,
+          pwd: hash, //비밀번호를 hash로 저장
+          nickname: post.nickname,
+        };
+        db.get("users").push(user).write();
+        req.login(user, function (err) {
+          req.flash("message", "join success!!");
+          req.session.save(() => res.redirect("/"));
+        });
       });
     }
   });
